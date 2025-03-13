@@ -36,7 +36,25 @@ pipeline {
 
         stage('Move WAR to docker/webapps') {
             steps {
-                sh 'mv $WORKSPACE/src/target/uvc.war $WORKSPACE/docker/webapps/uvc.war'
+                sh '''
+                echo "DEBUG: Searching WAR generated in current workspace..."
+
+                WAR_PATH=$(find $WORKSPACE -type f -name "uvc.war" | head -n 1)
+
+                if [ -z "$WAR_PATH" ]
+                    then
+                        echo "ERROR: No WAR was found in current workspace."
+                        exit 1
+                fi
+
+                echo "DEBUG: WAR found in: $WAR_PATH"
+
+                mkdir -p $WORKSPACE/docker/webapps/
+                mv "$WAR_PATH" $WORKSPACE/docker/webapps/uvc.war
+
+                echo "DEBUG: Content of docker/webapps:"
+                ls -ltr $WORKSPACE/docker/webapps/
+                '''
             }
         }
 
