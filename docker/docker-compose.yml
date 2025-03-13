@@ -6,7 +6,7 @@ services:
     volumes:
       - ./webapps:/usr/local/tomcat/webapps
     ports:
-      - "8080:8080"
+      - "8088:8080"
 
   tomcat-cluster-node1:
     image: tomcat:9.0.102-jre8
@@ -31,7 +31,7 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
-      - "80:80"
+      - "9080:80"
     networks:
       - tomcat-cluster
 
