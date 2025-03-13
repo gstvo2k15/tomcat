@@ -17,6 +17,13 @@ pipeline {
             }
         }
 
+        stage('Debugging') {
+            steps {
+                sh 'pwd'
+                sh 'ls -ltrR'
+            }
+        }
+
         stage('Build WAR') {
             steps {
                 sh 'cd src && mvn clean package'
@@ -25,7 +32,7 @@ pipeline {
 
         stage('Move WAR to docker/webapps') {
             steps {
-                sh 'mv src/target/uvc.war docker/webapps/uvc.war'
+                sh 'mv $WORKSPACE/src/target/uvc.war $WORKSPACE/docker/webapps/uvc.war'
             }
         }
 
@@ -48,4 +55,3 @@ pipeline {
         }
     }
 }
-
