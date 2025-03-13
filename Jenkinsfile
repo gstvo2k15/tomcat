@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    options {
+        preserveStashes()  // Evita que Jenkins borre archivos entre etapas
+    }
+
     environment {
         TOMCAT_CONTAINER_NAME = "docker-tomcat-standalone-1"
         DEPLOY_PATH = "/usr/local/tomcat/webapps/uvc.war"
