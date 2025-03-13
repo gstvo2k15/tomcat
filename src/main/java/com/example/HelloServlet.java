@@ -10,9 +10,9 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet("/hello")
 public class HelloServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+        throws ServletException, IOException {
         response.setContentType("text/html");
-        response.getWriter().println("<h1>Hola desde Tomcat!</h1>");
+        response.getWriter().println("<h1>Hola desde el Servlet!</h1>");
     }
 }
 
