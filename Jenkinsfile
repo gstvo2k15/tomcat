@@ -2,54 +2,50 @@ pipeline {
     agent any
 
     environment {
-        CONTAINER_NAME = 'docker-tomcat-standalone-1'
-        DEPLOY_PATH = '/usr/local/tomcat/webapps/'
-        WAR_NAME = 'uvc.war'
+        TOMCAT_CONTAINER_NAME = "docker-tomcat-standalone-1"
+        DEPLOY_PATH = "/usr/local/tomcat/webapps/uvc.war"
+    }
+
+    triggers {
+        githubPush()  // Se activa cuando hay un push en GitHub
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/gstvo2k15/tomcat.git'
+                git branch: 'main', url: 'https://github.com/gstvo2k15/tomcat.git'
             }
         }
 
-        stage('Build & Package') {
+        stage('Build WAR') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'cd src && mvn clean package'
             }
         }
 
-        stage('Deploy to Tomcat (Docker)') {
+        stage('Move WAR to docker/webapps') {
+            steps {
+                sh 'mv src/target/uvc.war docker/webapps/uvc.war'
+            }
+        }
+
+        stage('Deploy to Tomcat') {
             steps {
                 script {
-                    // Remove previously version
-                    sh "docker exec ${CONTAINER_NAME} rm -rf ${DEPLOY_PATH}/uvc"
-
-                    // Copy newest war
-                    sh "docker cp target/${WAR_NAME} ${CONTAINER_NAME}:${DEPLOY_PATH}"
+                    sh """
+                    docker cp docker/webapps/uvc.war ${TOMCAT_CONTAINER_NAME}:${DEPLOY_PATH}
+                    """
                 }
             }
         }
 
-        stage('Validation') {
+        stage('Restart Tomcat') {
             steps {
                 script {
-                    def response = sh(script: "curl -s -o /dev/null -w '%{http_code}' https://tomcatgolmolab.duckdns.org/uvc", returnStdout: true).trim()
-                    if (response != '200') {
-                        error("Deployment failed! App is not responding on tomcatgolmolab.duckdns.org/uvc")
-                    }
+                    sh "docker restart ${TOMCAT_CONTAINER_NAME}"
                 }
             }
-        }
-    }
-
-    post {
-        success {
-            echo '✅ Deployment successful!'
-        }
-        failure {
-            echo '❌ Deployment failed!'
         }
     }
 }
+
