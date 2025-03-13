@@ -34,7 +34,7 @@ pipeline {
             }
         }
 
-        stage('Move WAR to docker/webapps') {
+        stage('Deploy to Tomcat') {
             steps {
                 sh '''
                 echo "DEBUG: Searching WAR generated in current workspace..."
@@ -55,16 +55,6 @@ pipeline {
                 echo "DEBUG: Content of docker/webapps:"
                 ls -ltr $WORKSPACE/docker/webapps/
                 '''
-            }
-        }
-
-        stage('Deploy to Tomcat') {
-            steps {
-                script {
-                    sh """
-                    docker cp docker/webapps/uvc.war ${TOMCAT_CONTAINER_NAME}:${DEPLOY_PATH}
-                    """
-                }
             }
         }
 
