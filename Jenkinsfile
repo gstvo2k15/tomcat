@@ -73,7 +73,7 @@ pipeline {
             environment {
                 MINIO_URL = "https://miniogolmolab.duckdns.org"
                 MINIO_BUCKET = "war-files"
-                WAR_FILE = "${WORKSPACE}/target/uvc.war"
+                WAR_FILE = "${WORKSPACE_DIR}/target/uvc.war"
             }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'minio-s3', usernameVariable: 'MINIO_ACCESS_KEY', passwordVariable: 'MINIO_SECRET_KEY')]) {
