@@ -12,6 +12,7 @@ pipeline {
         DOCKER_IMAGE = "tomcat/ultimate-cicd:${BUILD_NUMBER}"
         SONAR_URL = "https://sonarqubegolmolab.duckdns.org"
         GIT_REPO = "https://github.com/gstvo2k15/tomcat.git"
+        WAR_TARGET = "${WORKSPACE_DIR}/docker/spring-boot-app/target/"
     }
 
     triggers {
@@ -72,7 +73,6 @@ pipeline {
             steps {
                 echo "Moving the WAR file to the Docker build context..."
                 sh '''
-                    mkdir -p ${WORKSPACE_DIR}/docker/spring-boot-app/target/
                     cp ${WORKSPACE_DIR}/target/uvc.war ${WORKSPACE_DIR}/docker/spring-boot-app/target/
                     ls -l ${WORKSPACE_DIR}/docker/spring-boot-app/target/
                 '''
@@ -84,7 +84,7 @@ pipeline {
                 script {
                     echo "Building Docker image with the embedded WAR file..."
                     sh '''
-                        cd ${WORKSPACE}/docker/spring-boot-app
+                        cd ${WAR_TARGET}
                         docker build -t ${DOCKER_IMAGE} .
                     '''
 
@@ -104,8 +104,7 @@ pipeline {
             steps {
                 echo "Copying the WAR file to the Tomcat server..."
                 sh '''
-                    mkdir -p ${WORKSPACE_DIR}/docker/webapps/
-                    cp ${WORKSPACE_DIR}/target/uvc.war ${WORKSPACE_DIR}/docker/webapps/
+                    mv ${WORKSPACE_DIR}/target/uvc.war ${WORKSPACE_DIR}/docker/webapps/
 
                     echo "Contents of docker/webapps:"
                     ls -ltr ${WORKSPACE_DIR}/docker/webapps/
