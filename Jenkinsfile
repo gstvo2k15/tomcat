@@ -84,7 +84,7 @@ pipeline {
                 script {
                     echo "Building Docker image with the embedded WAR file..."
                     sh '''
-                        cd ${WORKSPACE_DIR}/docker/spring-boot-app
+                        cd ${WORKSPACE}/docker/spring-boot-app
                         docker build -t ${DOCKER_IMAGE} .
                     '''
 
