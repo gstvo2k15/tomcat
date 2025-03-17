@@ -76,8 +76,8 @@ pipeline {
                     echo "Searching for the generated WAR file..."
                     def warFilePath = sh(script: "find ${WORKSPACE} -type f -name 'uvc.war' | head -n 1", returnStdout: true).trim()
 
-                    if (!warFilePath) {
-                        error "❌ ERROR: uvc.war not found in workspace!"
+                    if (!warFilePath || warFilePath == "null") {
+                        error "❌ ERROR: uvc.war not found in workspace! Check if the file exists with 'ls -lR ${WORKSPACE}/target/'"
                     }
 
                     echo "✅ WAR found at: ${warFilePath}"
@@ -86,13 +86,13 @@ pipeline {
                     env.WAR_PATH = warFilePath
 
                     // Ensure the target directory exists
-                    sh "mkdir -p ${WAR_TARGET}"
+                    sh "mkdir -p ${WORKSPACE}/docker/spring-boot-app/target/"
 
-                    // Move the WAR to the Docker build context
-                    sh "cp '${env.WAR_PATH}' ${WAR_TARGET}"
+                    // Copy the WAR to the Docker build context
+                    sh "cp '${env.WAR_PATH}' ${WORKSPACE}/docker/spring-boot-app/target/"
 
                     echo "✅ WAR successfully copied to Docker build context!"
-                    sh "ls -l ${WAR_TARGET}"
+                    sh "ls -l ${WORKSPACE}/docker/spring-boot-app/target/"
                 }
             }
         }
