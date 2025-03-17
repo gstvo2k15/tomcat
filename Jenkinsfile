@@ -73,9 +73,11 @@ pipeline {
             steps {
                 echo "Moving the WAR file to the Docker build context..."
                 sh '''
-                    mkdir -p ${WORKSPACE_DIR}/docker/spring-boot-app/target/
-                    cp ${WORKSPACE_DIR}/target/uvc.war ${WORKSPACE_DIR}/docker/spring-boot-app/target/
-                    ls -l ${WORKSPACE_DIR}/docker/spring-boot-app/target/
+                    mkdir -p ${WORKSPACE}/docker/spring-boot-app/target/
+                    cp ${WORKSPACE}/target/uvc.war ${WORKSPACE}/docker/spring-boot-app/target/
+
+                    echo "Listing contents of Docker build context:"
+                    ls -l ${WORKSPACE}/docker/spring-boot-app/target/
                 '''
             }
         }
