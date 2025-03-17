@@ -9,7 +9,7 @@ pipeline {
         WORKSPACE_DIR = "${WORKSPACE}/src"
         TOMCAT_CONTAINER_NAME = "docker-tomcat-standalone-1"
         DEPLOY_PATH = "/usr/local/tomcat/webapps/uvc.war"
-        DOCKER_IMAGE = "tomcat/ultimate-cicd:${BUILD_NUMBER}"
+        DOCKER_IMAGE = "tomcat/ultimate-cicd:latest"
         SONAR_URL = "https://sonarqubegolmolab.duckdns.org"
         GIT_REPO = "https://github.com/gstvo2k15/tomcat.git"
         WAR_TARGET = "${WORKSPACE_DIR}/docker/spring-boot-app/target/"
