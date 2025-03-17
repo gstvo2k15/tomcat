@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        WORKSPACE_DIR = "${WORKSPACE}/app"
+        WORKSPACE_DIR = "${WORKSPACE}/src"
         TOMCAT_CONTAINER_NAME = "docker-tomcat-standalone-1"
         DEPLOY_PATH = "/usr/local/tomcat/webapps/uvc.war"
         DOCKER_IMAGE = "tomcat/ultimate-cicd:${BUILD_NUMBER}"
@@ -28,8 +28,18 @@ pipeline {
             steps {
                 echo "Cloning repository into ${WORKSPACE_DIR}..."
                 sh '''
-                    rm -rf ${WORKSPACE_DIR} || true
-                    git clone --branch fix/deployment ${GIT_REPO} ${WORKSPACE_DIR}
+                    if [ -d "${WORKSPACE}/.git" ]
+                      then
+                          echo "Repository already exists, fetching latest changes..."
+                          cd ${WORKSPACE}
+                          git reset --hard
+                          git clean -fd
+                          git checkout fix/deployment
+                          git pull origin fix/deployment
+                      else
+                          echo "Cloning fresh repository..."
+                          git clone --branch fix/deployment ${GIT_REPO} ${WORKSPACE}
+                    fi
                 '''
                 sh "ls -l ${WORKSPACE_DIR}"
             }
