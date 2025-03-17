@@ -69,23 +69,6 @@ pipeline {
             }
         }
 
-        stage('Upload WAR to MinIO') {
-            environment {
-                MINIO_URL = "https://miniogolmolab.duckdns.org"
-                MINIO_BUCKET = "war-files"
-                WAR_FILE = "${WORKSPACE_DIR}/target/uvc.war"
-            }
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'minio-s3', usernameVariable: 'MINIO_ACCESS_KEY', passwordVariable: 'MINIO_SECRET_KEY')]) {
-                    sh '''
-                        echo "Uploading WAR file to MinIO..."
-                        mc alias set minio $MINIO_URL $MINIO_ACCESS_KEY $MINIO_SECRET_KEY
-                        mc cp $WAR_FILE minio/$MINIO_BUCKET/uvc-${BUILD_NUMBER}.war
-                    '''
-                }
-            }
-        }
-
         stage('Prepare Artifact for Docker') {
             steps {
                 echo "Moving the WAR file to the Docker build context..."
