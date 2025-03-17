@@ -9,7 +9,7 @@ pipeline {
         WORKSPACE_DIR = "${WORKSPACE}/src"
         TOMCAT_CONTAINER_NAME = "docker-tomcat-standalone-1"
         DEPLOY_PATH = "/usr/local/tomcat/webapps/uvc.war"
-        DOCKER_IMAGE = "tomcat/ultimate-cicd:latest"
+        DOCKER_IMAGE = "gstvo2k15/ultimate-cicd:latest"
         SONAR_URL = "https://sonarqubegolmolab.duckdns.org"
         GIT_REPO = "https://github.com/gstvo2k15/tomcat.git"
         WAR_TARGET = "${WORKSPACE_DIR}/docker/spring-boot-app/target/"
@@ -104,11 +104,11 @@ pipeline {
                         cd ${WORKSPACE}/docker/spring-boot-app
                         docker build -t ${DOCKER_IMAGE} .
                     '''
-        
+
                     echo "Logging into Docker Hub..."
                     withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         sh '''
-                            docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+                            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
                             echo "Pushing image..."
                             docker push ${DOCKER_IMAGE}
                         '''
