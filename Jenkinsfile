@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     options {
-        preserveStashes()  // Evita que Jenkins borre archivos entre etapas
+        preserveStashes()  // Jenkins do not remove files between steps
     }
 
     environment {
@@ -11,7 +11,7 @@ pipeline {
     }
 
     triggers {
-        githubPush()  // Se activa cuando hay un push en GitHub
+        githubPush() // Automatic trigger git push to main branch
     }
 
   stages {
@@ -25,7 +25,12 @@ pipeline {
       steps {
         sh 'ls -ltr'
         // build the project and create a WAR file
-        sh 'cd src && mvn clean package'
+        sh '''
+            cd src
+            mvn clean package
+            echo "Checking generated files..."
+            ls -l target/
+        '''
       }
     }
     stage('Static Code Analysis') {
