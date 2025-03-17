@@ -54,6 +54,9 @@ pipeline {
 
                 echo "DEBUG: Content of docker/webapps:"
                 ls -ltr $WORKSPACE/docker/webapps/
+
+                echo "FINISH: Copy to Tomcat folder for webapps:"
+                cp $WORKSPACE/docker/webapps/uvc.war /root/tomcat/docker/webapps/
                 '''
             }
         }
