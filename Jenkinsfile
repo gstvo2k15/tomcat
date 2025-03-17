@@ -180,6 +180,7 @@ pipeline {
         }
         always {
             cleanWs()
+            }
         }
     }
 }
