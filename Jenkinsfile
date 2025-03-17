@@ -13,6 +13,7 @@ pipeline {
         SONAR_URL = "https://sonarqubegolmolab.duckdns.org"
         GIT_REPO = "https://github.com/gstvo2k15/tomcat.git"
         WAR_TARGET = "${WORKSPACE_DIR}/docker/spring-boot-app/target/"
+        WAR_PATH = ""
     }
 
     triggers {
@@ -71,35 +72,35 @@ pipeline {
 
         stage('Prepare Artifact for Docker') {
             steps {
-                echo "Searching for the generated WAR file..."
-                sh '''
-                    # Search for the WAR file in the workspace
-                    WAR_PATH=$(find ${WORKSPACE} -type f -name "uvc.war" | head -n 1)
+                script {
+                    echo "Searching for the generated WAR file..."
+                    def warFilePath = sh(script: "find ${WORKSPACE} -type f -name 'uvc.war' | head -n 1", returnStdout: true).trim()
 
-                    if [ -z "$WAR_PATH" ]
-                        then
-                            echo "❌ ERROR: uvc.war not found in workspace!"
-                            exit 1
-                        fi
+                    if (!warFilePath) {
+                        error "❌ ERROR: uvc.war not found in workspace!"
+                    }
 
-                    echo "✅ WAR found at: $WAR_PATH"
+                    echo "✅ WAR found at: ${warFilePath}"
 
-                    # Ensure the target directory exists
-                    mkdir -p ${WORKSPACE}/docker/spring-boot-app/target/
+                    // Store the WAR path globally
+                    env.WAR_PATH = warFilePath
 
-                    # Copy the WAR to the Docker build context
-                    cp "$WAR_PATH" ${WORKSPACE}/docker/spring-boot-app/target/
+                    // Ensure the target directory exists
+                    sh "mkdir -p ${WAR_TARGET}"
+
+                    // Move the WAR to the Docker build context
+                    sh "cp '${env.WAR_PATH}' ${WAR_TARGET}"
 
                     echo "✅ WAR successfully copied to Docker build context!"
-                    ls -l ${WORKSPACE}/docker/spring-boot-app/target/
-                '''
+                    sh "ls -l ${WAR_TARGET}"
+                }
             }
         }
 
         stage('Build & Push Docker Image') {
             steps {
                 script {
-                    echo "Building Docker image with the embedded WAR file..."
+                    echo "Building Docker image..."
                     sh '''
                         cd ${WORKSPACE}/docker/spring-boot-app
                         docker build -t ${DOCKER_IMAGE} .
@@ -117,23 +118,27 @@ pipeline {
             }
         }
 
-
         // ======================================
         // 🔴 CONTINUOUS DELIVERY (CD)
         // ======================================
 
         stage('Deploy to Tomcat') {
             steps {
-                echo "Copying the WAR file to the Tomcat server..."
-                sh '''
-                    mv ${WORKSPACE_DIR}/target/uvc.war ${WORKSPACE_DIR}/docker/webapps/
+                script {
+                    echo "Using previously found WAR file for deployment: ${env.WAR_PATH}"
 
-                    echo "Contents of docker/webapps:"
-                    ls -ltr ${WORKSPACE_DIR}/docker/webapps/
+                    // Ensure the target directory exists
+                    sh "mkdir -p ${WORKSPACE}/docker/webapps/"
+
+                    // Move the WAR to Tomcat's webapps directory
+                    sh "mv '${env.WAR_PATH}' ${WORKSPACE}/docker/webapps/uvc.war"
+
+                    echo "✅ WAR moved to Docker webapps folder!"
+                    sh "ls -ltr ${WORKSPACE}/docker/webapps/"
 
                     echo "Copying WAR to Tomcat..."
-                    sudo cp -p ${WORKSPACE_DIR}/docker/webapps/uvc.war /root/tomcat/docker/webapps/
-                '''
+                    sh "sudo cp -p ${WORKSPACE}/docker/webapps/uvc.war /root/tomcat/docker/webapps/"
+                }
             }
         }
 
