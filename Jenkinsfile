@@ -1,9 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'docker:latest'
-        }
-    }
+    agent any
 
     options {
         preserveStashes()
@@ -108,14 +104,19 @@ pipeline {
                         cd ${WORKSPACE}/docker/spring-boot-app
                         docker build -t ${DOCKER_IMAGE} .
                     '''
-
-                    echo "Pushing image to Docker Hub..."
-                    docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
-                        docker.image("${DOCKER_IMAGE}").push()
+        
+                    echo "Logging into Docker Hub..."
+                    withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh '''
+                            docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+                            echo "Pushing image..."
+                            docker push ${DOCKER_IMAGE}
+                        '''
                     }
                 }
             }
         }
+
 
         // ======================================
         // 🔴 CONTINUOUS DELIVERY (CD)
