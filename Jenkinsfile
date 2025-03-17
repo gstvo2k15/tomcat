@@ -71,12 +71,26 @@ pipeline {
 
         stage('Prepare Artifact for Docker') {
             steps {
-                echo "Moving the WAR file to the Docker build context..."
+                echo "Searching for the generated WAR file..."
                 sh '''
-                    mkdir -p ${WORKSPACE}/docker/spring-boot-app/target/
-                    cp ${WORKSPACE}/target/uvc.war ${WORKSPACE}/docker/spring-boot-app/target/
+                    # Search for the WAR file in the workspace
+                    WAR_PATH=$(find ${WORKSPACE} -type f -name "uvc.war" | head -n 1)
 
-                    echo "Listing contents of Docker build context:"
+                    if [ -z "$WAR_PATH" ]
+                        then
+                            echo "❌ ERROR: uvc.war not found in workspace!"
+                            exit 1
+                        fi
+
+                    echo "✅ WAR found at: $WAR_PATH"
+
+                    # Ensure the target directory exists
+                    mkdir -p ${WORKSPACE}/docker/spring-boot-app/target/
+
+                    # Copy the WAR to the Docker build context
+                    cp "$WAR_PATH" ${WORKSPACE}/docker/spring-boot-app/target/
+
+                    echo "✅ WAR successfully copied to Docker build context!"
                     ls -l ${WORKSPACE}/docker/spring-boot-app/target/
                 '''
             }
