@@ -1,11 +1,8 @@
-FROM adoptopenjdk/openjdk11:alpine-jre
+# Dockerfile
+FROM tomcat:9-jdk8
 
-# Simply the artifact path
-ARG artifact=target/spring-boot-web.jar
+# Variable ARG opcional si quieres parametrizar el nombre del WAR
+ARG artifact=target/uvc.war
 
-WORKDIR /opt/app
-
-COPY ${artifact} app.jar
-
-# This should not be changed
-ENTRYPOINT ["java","-jar","app.jar"]
+# Copiamos el WAR dentro de la carpeta webapps de Tomcat
+COPY ${artifact} /usr/local/tomcat/webapps/uvc.war

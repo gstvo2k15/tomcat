@@ -24,7 +24,7 @@ pipeline {
     stage('Build and Test') {
       steps {
         sh 'ls -ltr'
-        // build the project and create a JAR file
+        // build the project and create a WAR file
         sh 'cd src && mvn clean package'
       }
     }
@@ -40,7 +40,7 @@ pipeline {
     }
     stage('Build and Push Docker Image') {
       environment {
-        DOCKER_IMAGE = "abhishekf5/ultimate-cicd:${BUILD_NUMBER}"
+        DOCKER_IMAGE = "tomcat/ultimate-cicd:${BUILD_NUMBER}"
         // DOCKERFILE_LOCATION = "docker/spring-boot-app/Dockerfile"
         REGISTRY_CREDENTIALS = credentials('docker-cred')
       }
@@ -54,10 +54,46 @@ pipeline {
         }
       }
     }
+
+        stage('Deploy to Tomcat') {
+            steps {
+                sh '''
+                echo "DEBUG: Searching WAR generated in current workspace..."
+
+                WAR_PATH=$(find $WORKSPACE -type f -name "uvc.war" | head -n 1)
+
+                if [ -z "$WAR_PATH" ]
+                    then
+                        echo "ERROR: No WAR was found in current workspace."
+                        exit 1
+                fi
+
+                echo "DEBUG: WAR found in: $WAR_PATH"
+
+                mkdir -p $WORKSPACE/docker/webapps/
+                mv "$WAR_PATH" $WORKSPACE/docker/webapps/uvc.war
+
+                echo "DEBUG: Content of docker/webapps:"
+                ls -ltr $WORKSPACE/docker/webapps/
+
+                echo "FINISH: Copy to Tomcat folder for webapps:"
+                sudo cp -p $WORKSPACE/docker/webapps/uvc.war /root/tomcat/docker/webapps/
+                '''
+            }
+        }
+
+        stage('Restart Tomcat') {
+            steps {
+                script {
+                    sh "docker restart ${TOMCAT_CONTAINER_NAME}"
+                }
+            }
+        }
+
     stage('Update Deployment File') {
         environment {
             GIT_REPO_NAME = "tomcat"
-            GIT_USER_NAME = "Gustavo Olmo"
+            GIT_USER_NAME = "gstvo2k15"
         }
         steps {
             withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
