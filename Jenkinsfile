@@ -113,6 +113,7 @@ pipeline {
                     sh "mkdir -p ${WORKSPACE}/docker/webapps/"
                     sh "mv '${env.WAR_PATH}' ${WORKSPACE}/docker/webapps/uvc.war"
                     echo "✅ WAR moved to Docker webapps folder!"
+
                     sh "ls -ltr ${WORKSPACE}/docker/webapps/"
                     sh "sudo cp -p ${WORKSPACE}/docker/webapps/uvc.war /root/tomcat/docker/webapps/"
                 }
@@ -130,7 +131,12 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     sh '''
-                        cd ${WORKSPACE_DIR}
+                        echo "Current directory for debbugin last step"
+                        pwd
+
+                        echo "Changing to workspace dir and review content:"
+                        cd ${WORKSPACE} && ls -ltrR
+
                         git config user.email "gstvo2k15@gmail.com"
                         git config user.name "Gustavo Olmo"
                         sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" spring-boot-app-manifests/deployment.yml
