@@ -157,17 +157,13 @@ pipeline {
         stage('Trigger ArgoCD Sync') {
             steps {
                 script {
-                    echo "Checking if ArgoCD is installed..."
-                    def argocdExists = sh(script: "command -v argocd || echo 'not_found'", returnStdout: true).trim()
-                    if (argocdExists == "not_found") {
-                        error "ArgoCD CLI not installed. Install it before running the pipeline."
-                    }
-
-                    echo "Triggering ArgoCD sync..."
                     withCredentials([string(credentialsId: 'argocd-admin-pass', variable: 'ARGOCD_PASSWORD')]) {
                         sh '''
-                            export KUBECONFIG=$KUBECONFIG
-                            argocd login --grpc-web argocd.gstvolab.duckdns.org --username admin --password $ARGOCD_PASSWORD --insecure
+                            argocd login --grpc-web argocd.gstvolab.duckdns.org \
+                                --username admin \
+                                --password $ARGOCD_PASSWORD \
+                                --insecure
+        
                             argocd app sync spring-boot-app
                         '''
                     }
