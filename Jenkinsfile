@@ -135,7 +135,7 @@ pipeline {
                         pwd
 
                         echo "Changing to workspace dir and review content:"
-                        cd ${WORKSPACE} && ls -ltrR
+                        cd ${WORKSPACE} && ls -ltr
 
                         git config user.email "gstvo2k15@gmail.com"
                         git config user.name "Gustavo Olmo"
@@ -152,9 +152,10 @@ pipeline {
             steps {
                 script {
                     echo "Triggering ArgoCD sync..."
-                    withCredentials([string(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                         sh '''
                             export KUBECONFIG=$KUBECONFIG
+                            kubectl config use-context minikube
                             argocd app sync spring-boot-app
                         '''
                     }
