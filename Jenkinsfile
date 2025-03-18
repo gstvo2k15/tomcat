@@ -26,7 +26,7 @@ pipeline {
                 echo "Cloning repository..."
                 sh '''
                     if [ -d "${WORKSPACE}/.git" ]; then
-                        echo "Repository already exists, fetching latest changes..."
+                        echo "Fetching latest changes..."
                         cd ${WORKSPACE}
                         git reset --hard
                         git clean -fd
@@ -111,8 +111,8 @@ pipeline {
                     echo "Using previously found WAR file for deployment: ${env.WAR_PATH}"
 
                     sh "mkdir -p ${WORKSPACE}/docker/webapps/"
-                    sh "mv '${env.WAR_PATH}' ${WORKSPACE}/docker/webapps/uvc.war"
-                    echo "✅ WAR moved to Docker webapps folder!"
+                    sh "cp '${env.WAR_PATH}' ${WORKSPACE}/docker/webapps/uvc.war"
+                    echo "✅ WAR copied to Docker webapps folder!"
 
                     sh "ls -ltr ${WORKSPACE}/docker/webapps/"
                     sh "sudo cp -p ${WORKSPACE}/docker/webapps/uvc.war /root/tomcat/docker/webapps/"
@@ -131,18 +131,24 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     sh '''
-                        echo "Current directory for debbugin last step"
+                        echo "Current directory for debugging last step"
                         pwd
 
-                        echo "Changing to workspace dir and review content:"
+                        echo "Changing to workspace dir and reviewing content:"
                         cd ${WORKSPACE} && ls -ltr
 
                         git config user.email "gstvo2k15@gmail.com"
                         git config user.name "Gustavo Olmo"
                         sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" spring-boot-app-manifests/deployment.yml
-                        git add .
-                        git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                        git push https://${GITHUB_TOKEN}@github.com/gstvo2k15/tomcat HEAD:fix/deployment
+                        
+                        git add spring-boot-app-manifests/deployment.yml
+                        
+                        if git diff --cached --exit-code; then
+                            echo "No changes to commit."
+                        else
+                            git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                            git push https://${GITHUB_TOKEN}@github.com/gstvo2k15/tomcat HEAD:fix/deployment
+                        fi
                     '''
                 }
             }
@@ -151,6 +157,12 @@ pipeline {
         stage('Trigger ArgoCD Sync') {
             steps {
                 script {
+                    echo "Checking if ArgoCD is installed..."
+                    def argocdExists = sh(script: "command -v argocd || echo 'not_found'", returnStdout: true).trim()
+                    if (argocdExists == "not_found") {
+                        error "ArgoCD CLI not installed. Install it before running the pipeline."
+                    }
+
                     echo "Triggering ArgoCD sync..."
                     withCredentials([string(credentialsId: 'argocd-admin-pass', variable: 'ARGOCD_PASSWORD')]) {
                         sh '''

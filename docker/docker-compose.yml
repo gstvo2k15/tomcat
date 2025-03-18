@@ -4,7 +4,7 @@ services:
     environment:
       - CATALINA_OPTS=-Xms256m -Xmx512m
     volumes:
-      - tomcat-webapps:/usr/local/tomcat/webapps
+      - ./webapps:/usr/local/tomcat/webapps
     ports:
       - "8088:8080"
 
@@ -13,7 +13,7 @@ services:
     environment:
       - CATALINA_OPTS=-Xms256m -Xmx512m
     volumes:
-      - tomcat-webapps:/usr/local/tomcat/webapps
+      - ./webapps:/usr/local/tomcat/webapps
     networks:
       - tomcat-cluster
 
@@ -22,7 +22,7 @@ services:
     environment:
       - CATALINA_OPTS=-Xms256m -Xmx512m
     volumes:
-      - tomcat-webapps:/usr/local/tomcat/webapps
+      - ./webapps:/usr/local/tomcat/webapps
     networks:
       - tomcat-cluster
 
@@ -38,6 +38,3 @@ services:
 networks:
   tomcat-cluster:
     driver: bridge
-
-volumes:
-  tomcat-webapps:

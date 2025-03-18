@@ -1,4 +1,3 @@
-
 target/
 *.war
 *.jar
@@ -16,6 +15,7 @@ mvnw.cmd
 .settings/
 .vscode/
 
+# 🔹 Ignorar archivos de Jenkins y pipelines
 jenkins_home/
 *.log
 workspace/
@@ -23,10 +23,8 @@ node_modules/
 .jenkins/
 .pipeline/
 
-webapps/
 docker/webapps/
-docker/webapps/uvc/
-docker/webapps/uvc/*
+docker/webapps/*
 docker/tomcat/logs/
 docker/tomcat/temp/
 docker/tomcat/work/
