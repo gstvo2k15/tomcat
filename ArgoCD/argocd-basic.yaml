@@ -1,10 +1,16 @@
 apiVersion: argoproj.io/v1alpha1
-kind: ArgoCD
+kind: Application
 metadata:
-  name: example-argocd
-  labels:
-    example: basic
+  name: spring-boot-app
 spec:
-  server:
-    service:
-      type: NodePort
+  destination:
+    namespace: default
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://github.com/gstvo2k15/tomcat.git
+    targetRevision: main
+    path: spring-boot-app-manifests
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
