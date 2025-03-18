@@ -152,10 +152,10 @@ pipeline {
             steps {
                 script {
                     echo "Triggering ArgoCD sync..."
-                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    withCredentials([string(credentialsId: 'argocd-admin-pass', variable: 'ARGOCD_PASSWORD')]) {
                         sh '''
                             export KUBECONFIG=$KUBECONFIG
-                            kubectl config use-context minikube
+                            argocd login --grpc-web argocd-server --username admin --password $ARGOCD_PASSWORD --insecure
                             argocd app sync spring-boot-app
                         '''
                     }
