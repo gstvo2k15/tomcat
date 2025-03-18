@@ -167,7 +167,7 @@ pipeline {
                     withCredentials([string(credentialsId: 'argocd-admin-pass', variable: 'ARGOCD_PASSWORD')]) {
                         sh '''
                             export KUBECONFIG=$KUBECONFIG
-                            argocd login --grpc-web argocd-server --username admin --password $ARGOCD_PASSWORD --insecure
+                            argocd login --grpc-web 192.168.1.222:9980 --username admin --password $ARGOCD_PASSWORD --insecure
                             argocd app sync spring-boot-app
                         '''
                     }
