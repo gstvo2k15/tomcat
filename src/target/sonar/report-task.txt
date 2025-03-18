@@ -1,0 +1,6 @@
+projectKey=com.example:uvc
+serverUrl=https://sonarqubegolmolab.duckdns.org
+serverVersion=25.3.0.104237
+dashboardUrl=https://sonarqubegolmolab.duckdns.org/dashboard?id=com.example%3Auvc
+ceTaskId=93602f4f-f482-490b-85b1-e35c418b93de
+ceTaskUrl=https://sonarqubegolmolab.duckdns.org/api/ce/task?id=93602f4f-f482-490b-85b1-e35c418b93de
