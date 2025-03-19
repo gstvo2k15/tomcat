@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   destination:
-    namespace: default
+    namespace: tomcatk8s
     server: https://kubernetes.default.svc
   source:
     repoURL: https://github.com/gstvo2k15/tomcat.git

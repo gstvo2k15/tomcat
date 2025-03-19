@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: spring-boot-app
+  namespace: tomcatk8s
   labels:
     app: spring-boot-app
 spec:
@@ -16,6 +17,32 @@ spec:
     spec:
       containers:
       - name: spring-boot-app
-        image: gstvo2k15/ultimate-cicd:36
+        image: gstvo2k15/ultimate-cicd:latest
         ports:
         - containerPort: 8080
+        volumeMounts:
+        - name: tomcat-war-storage
+          mountPath: /usr/local/tomcat/webapps/
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: tomcat-war-storage
+        persistentVolumeClaim:
+          claimName: tomcat-war-pvc
