@@ -71,38 +71,36 @@ pipeline {
                 script {
                     echo "Searching for the generated WAR file..."
                     def warFilePath = sh(script: "find ${WORKSPACE} -type f -name 'uvc.war' | head -n 1", returnStdout: true).trim()
-
+        
                     if (!warFilePath) {
-                        {
-                            error "❌ ERROR: uvc.war not found in workspace!"
-                        }
-                    }   else {
-                            echo "✅ WAR found at: ${warFilePath}"
-                            env.WAR_PATH = warFilePath
-                            def warFile = "${env.WAR_PATH}"
-                        }
-
+                        error "❌ ERROR: uvc.war not found in workspace!"
+                    } else {
+                        echo "✅ WAR found at: ${warFilePath}"
+                        env.WAR_PATH = warFilePath
+                    }
+        
+                    def warFile = env.WAR_PATH
+        
                     if (fileExists(warFile)) {
                         withCredentials([usernamePassword(credentialsId: 'minio-s3', usernameVariable: 'MINIO_ACCESS_KEY', passwordVariable: 'MINIO_SECRET_KEY')]) {
                             sh '''
-                                sh "mkdir -p ${WAR_TARGET}"
-                                sh "cp '${env.WAR_PATH}' ${WAR_TARGET}"
+                                mkdir -p ${WAR_TARGET}
+                                cp '${env.WAR_PATH}' ${WAR_TARGET}
                                 echo "✅ WAR successfully copied to Docker build context!"
-                                sh "ls -l ${WAR_TARGET}"
-
+                                ls -l ${WAR_TARGET}
+        
                                 echo "Uploading WAR file to MinIO..."
                                 mc alias set minio ${MINIO_URL} ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}
-                                mc cp ${warFile} minio/${MINIO_BUCKET}/uvc-${BUILD_NUMBER}.war
+                                mc cp ${env.WAR_PATH} minio/${MINIO_BUCKET}/uvc-${BUILD_NUMBER}.war
                             '''
                         }
                     } else {
                         error "WAR file not found! Build might have failed."
                     }
-
-
                 }
             }
         }
+
 
         stage('Build & Push Docker Image') {
             steps {
