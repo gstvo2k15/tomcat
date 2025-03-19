@@ -147,46 +147,99 @@ Key is saved at:         /etc/letsencrypt/live/argocdgolmolab.duckdns.org/privke
 This certificate expires on 2025-06-17.
 
 
-
 sudo mv /etc/nginx/conf.d/minikube.conf /etc/nginx/conf.d/minikube.conf.bak
+```
 
 
-cat <<EOF > /etc/nginx/conf.d/argocdgolmolab.conf
+### Changing to NodePort rest of argocd services
+```
+kubectl get svc -n argocd
+NAME                               TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                         AGE
+argocd-applicationset-controller   ClusterIP      10.107.92.63     <none>          7000/TCP                        25h
+argocd-dex-server                  ClusterIP      10.99.194.30     <none>          5556/TCP,5557/TCP               25h
+argocd-redis                       ClusterIP      10.111.117.215   <none>          6379/TCP                        25h
+argocd-repo-server                 ClusterIP      10.106.98.174    <none>          8081/TCP                        25h
+argocd-server                      LoadBalancer   10.108.223.125   192.168.1.222   9980:31593/TCP,9943:32409/TCP   22h
+cm-acme-http-solver-vptj5          NodePort       10.99.2.219      <none>          8089:31390/TCP                  16h
+
+
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort"}}'
+service/argocd-server patched
+
+
+kubectl get svc -n argocd
+NAME                               TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                         AGE
+argocd-applicationset-controller   ClusterIP   10.107.92.63     <none>        7000/TCP                        25h
+argocd-dex-server                  ClusterIP   10.99.194.30     <none>        5556/TCP,5557/TCP               25h
+argocd-redis                       ClusterIP   10.111.117.215   <none>        6379/TCP                        25h
+argocd-repo-server                 ClusterIP   10.106.98.174    <none>        8081/TCP                        25h
+argocd-server                      NodePort    10.108.223.125   <none>        9980:31593/TCP,9943:32409/TCP   22h
+cm-acme-http-solver-vptj5          NodePort    10.99.2.219      <none>        8089:31390/TCP                  16h
+
+
+minikube ip
+192.168.49.2
+
+
+kubectl get svc -n argocd
+NAME                               TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                         AGE
+argocd-server                      NodePort    10.108.223.125   <none>        9980:31593/TCP,9943:32409/TCP   22h
+
+For nginx use: 9980 -> 31593
+
+
+vim /etc/nginx/conf.d/argocdgolmolab.conf
 # --- Redirección de HTTP a HTTPS ---
 server {
     listen 80;
     server_name argocdgolmolab.duckdns.org;
-    return 302 https://argocdgolmolab.duckdns.org;
+    return 302 https://argocdgolmolab.duckdns.org$request_uri;
 }
 
 # --- Servidor HTTPS con Let's Encrypt ---
 server {
     listen 443 ssl;
+	http2 on;
     server_name argocdgolmolab.duckdns.org;
 
     ssl_certificate     /etc/letsencrypt/live/argocdgolmolab.duckdns.org/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/argocdgolmolab.duckdns.org/privkey.pem;
 
+    # Proxy para la interfaz web de ArgoCD
     location / {
-       # Tu ArgoCD está en https://192.168.49.2:31593
-       proxy_pass        https://192.168.49.2:31593;
-       proxy_ssl_verify  off;
+        proxy_pass        https://192.168.49.2:31593;
+        proxy_ssl_verify  off;
+        proxy_set_header  Host $host;
+        proxy_set_header  X-Real-IP $remote_addr;
+        proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
 
-       # Cabeceras básicas sin variables raras:
-       proxy_set_header  Host $http_host;
-       proxy_set_header  X-Real-IP $remote_addr;
-       proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+    # Proxy para gRPC (CLI de ArgoCD)
+    location /grpc {
+        grpc_pass grpc://192.168.49.2:32443;
+        error_page 502 = /error502grpc;
+    }
+
+    # Respuesta para evitar errores gRPC
+    location = /error502grpc {
+        return 502 'gRPC service unavailable';
+        add_header Content-Length 0;
     }
 }
 
-EOF
-
-cat -A /etc/nginx/conf.d/argocdgolmolab.conf
-
-sudo apt install -yqq dos2unix
-dos2unix /etc/nginx/conf.d/argocdgolmolab.conf
 
 nginx -t
 
 systemctl reload nginx
+
+argocd admin initial-password -n argocd
+
+argocd login argocdgolmolab.duckdns.org:443 \
+    --grpc-web \
+    --username admin \
+    --password "$YOUR_PASSWD" \
+    --insecure
+
+'admin:login' logged in successfully
+Context 'argocdgolmolab.duckdns.org:443' updated
 ```
