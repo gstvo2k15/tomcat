@@ -167,11 +167,11 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: 'argocd-admin-pass', variable: 'ARGOCD_PASSWORD')]) {
                         sh '''
-                            argocd login --grpc-web https://argocdgolmolab.duckdns.org \
+                            argocd login argocdgolmolab.duckdns.org:443 \
+                                --grpc-web \
                                 --username admin \
-                                --password $ARGOCD_PASSWORD \
-
-                            argocd app sync spring-boot-app
+                                --password "hQqK73bQ5b3i2knN" \
+                                --insecure
                         '''
                     }
                 }
@@ -182,9 +182,15 @@ pipeline {
     post {
         success {
             echo "✅ CI/CD Pipeline completed successfully."
+            emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
+                     subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful", 
+                     mimeType: 'text/html', to: "gstvo2k15@gmail.com"
         }
         failure {
             echo "❌ CI/CD Pipeline failed. Check the logs."
+            emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
+                     subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed", 
+                     mimeType: 'text/html', to: "gstvo2k15@gmail.com"
         }
         always {
             cleanWs()
