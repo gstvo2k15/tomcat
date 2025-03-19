@@ -161,8 +161,6 @@ pipeline {
                         echo "Changing to workspace dir and reviewing content:"
                         cd ${WORKSPACE} && ls -ltr
 
-                        git config user.email "gstvo2k15@gmail.com"
-                        git config user.name "Gustavo Olmo"
                         sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" spring-boot-app-manifests/deployment.yml
                         
                         git add spring-boot-app-manifests/deployment.yml
