@@ -1,5 +1,6 @@
 elasticsearch:
   enabled: true
+  image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
   replicas: 1
   volumeSize: 10Gi
   heapSize: "1g"
@@ -7,6 +8,7 @@ elasticsearch:
 
 logstash:
   enabled: true
+  image: docker.elastic.co/logstash/logstash:8.10.2
   nodePort: 30093
   pipelineConfig: |
     input {
@@ -23,6 +25,7 @@ logstash:
 
 kibana:
   enabled: true
+  image: docker.elastic.co/kibana/kibana:8.10.2
   elasticsearchHost: "http://elasticsearch:9200"
   nodePort: 30094
 
