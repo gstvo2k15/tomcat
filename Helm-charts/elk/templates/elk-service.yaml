@@ -45,3 +45,4 @@ spec:
       port: 5601
       targetPort: 5601
       nodePort: {{ .Values.kibana.nodePort }}
+
