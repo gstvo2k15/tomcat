@@ -15,11 +15,35 @@ spec:
       labels:
         app: spring-boot-app
     spec:
+      restartPolicy: Always
+      initContainers:
+      - name: check-war
+        image: busybox
+        command: ["sh", "-c", "until [ -f /usr/local/tomcat/webapps/app.war ]; do echo 'Waiting for WAR file...'; sleep 5; done"]
+        volumeMounts:
+        - name: tomcat-war-storage
+          mountPath: /usr/local/tomcat/webapps/
       containers:
       - name: spring-boot-app
         image: gstvo2k15/ultimate-cicd:latest
         ports:
         - containerPort: 8080
+        env:
+        - name: SPRING_DATASOURCE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: spring-boot-config
+              key: SPRING_DATASOURCE_URL
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: spring-boot-config
+              key: SPRING_DATASOURCE_USERNAME
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: spring-boot-secrets
+              key: SPRING_DATASOURCE_PASSWORD
         volumeMounts:
         - name: tomcat-war-storage
           mountPath: /usr/local/tomcat/webapps/
@@ -32,16 +56,18 @@ spec:
             cpu: "500m"
         livenessProbe:
           httpGet:
-            path: /actuator/health
+            path: /
             port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 5
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
         readinessProbe:
           httpGet:
-            path: /actuator/health
+            path: /
             port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 5
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
       volumes:
       - name: tomcat-war-storage
         persistentVolumeClaim:
