@@ -73,13 +73,14 @@ pipeline {
                     def warFilePath = sh(script: "find ${WORKSPACE} -type f -name 'uvc.war' | head -n 1", returnStdout: true).trim()
 
                     if (!warFilePath) {
-                        error "❌ ERROR: uvc.war not found in workspace!"
-                    }
-                    } else {
-                        echo "✅ WAR found at: ${warFilePath}"
-                        env.WAR_PATH = warFilePath
-                        def warFile = "${env.WAR_PATH}"                        
-                    }
+                        {
+                            error "❌ ERROR: uvc.war not found in workspace!"
+                        }
+                    }   else {
+                            echo "✅ WAR found at: ${warFilePath}"
+                            env.WAR_PATH = warFilePath
+                            def warFile = "${env.WAR_PATH}"
+                        }
 
                     if (fileExists(warFile)) {
                         withCredentials([usernamePassword(credentialsId: 'minio-s3', usernameVariable: 'MINIO_ACCESS_KEY', passwordVariable: 'MINIO_SECRET_KEY')]) {
