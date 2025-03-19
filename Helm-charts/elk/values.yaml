@@ -25,3 +25,6 @@ kibana:
   enabled: true
   elasticsearchHost: "http://elasticsearch:9200"
   nodePort: 30094
+
+ingress:
+  enabled: false
