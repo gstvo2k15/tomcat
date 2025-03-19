@@ -2,7 +2,7 @@ services:
   tomcat-standalone:
     image: tomcat:9.0.102-jre8
     environment:
-      - CATALINA_OPTS=-Xms512m -Xmx1024m
+      - CATALINA_OPTS=-Xms256m -Xmx512m
     volumes:
       - ./webapps:/usr/local/tomcat/webapps
     ports:
@@ -11,7 +11,7 @@ services:
   tomcat-cluster-node1:
     image: tomcat:9.0.102-jre8
     environment:
-      - CATALINA_OPTS=-Xms512m -Xmx1024m
+      - CATALINA_OPTS=-Xms256m -Xmx512m
     volumes:
       - ./webapps:/usr/local/tomcat/webapps
     networks:
@@ -20,7 +20,7 @@ services:
   tomcat-cluster-node2:
     image: tomcat:9.0.102-jre8
     environment:
-      - CATALINA_OPTS=-Xms512m -Xmx1024m
+      - CATALINA_OPTS=-Xms256m -Xmx512m
     volumes:
       - ./webapps:/usr/local/tomcat/webapps
     networks:

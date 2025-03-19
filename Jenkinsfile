@@ -26,7 +26,7 @@ pipeline {
                 echo "Cloning repository..."
                 sh '''
                     if [ -d "${WORKSPACE}/.git" ]; then
-                        echo "Repository already exists, fetching latest changes..."
+                        echo "Fetching latest changes..."
                         cd ${WORKSPACE}
                         git reset --hard
                         git clean -fd
@@ -105,14 +105,22 @@ pipeline {
             }
         }
 
+        stage("Trivy Scan") {
+            steps {
+                script {
+	                sh ('docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image ${DOCKER_IMAGE} --no-progress --scanners vuln  --exit-code 0 --severity HIGH,CRITICAL --format table')
+                }
+            }
+        }
+
         stage('Deploy to Tomcat') {
             steps {
                 script {
                     echo "Using previously found WAR file for deployment: ${env.WAR_PATH}"
 
                     sh "mkdir -p ${WORKSPACE}/docker/webapps/"
-                    sh "mv '${env.WAR_PATH}' ${WORKSPACE}/docker/webapps/uvc.war"
-                    echo "✅ WAR moved to Docker webapps folder!"
+                    sh "cp '${env.WAR_PATH}' ${WORKSPACE}/docker/webapps/uvc.war"
+                    echo "✅ WAR copied to Docker webapps folder!"
 
                     sh "ls -ltr ${WORKSPACE}/docker/webapps/"
                     sh "sudo cp -p ${WORKSPACE}/docker/webapps/uvc.war /root/tomcat/docker/webapps/"
@@ -131,19 +139,41 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     sh '''
-                        echo "Current directory for debbugin last step"
+                        echo "Current directory for debugging last step"
                         pwd
 
-                        echo "Changing to workspace dir and review content:"
-                        cd ${WORKSPACE} && ls -ltrR
+                        echo "Changing to workspace dir and reviewing content:"
+                        cd ${WORKSPACE} && ls -ltr
 
                         git config user.email "gstvo2k15@gmail.com"
                         git config user.name "Gustavo Olmo"
                         sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" spring-boot-app-manifests/deployment.yml
-                        git add .
-                        git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                        git push https://${GITHUB_TOKEN}@github.com/gstvo2k15/tomcat HEAD:main
+                        
+                        git add spring-boot-app-manifests/deployment.yml
+                        
+                        if git diff --cached --exit-code; then
+                            echo "No changes to commit."
+                        else
+                            git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                            git push https://${GITHUB_TOKEN}@github.com/gstvo2k15/tomcat HEAD:fix/deployment
+                        fi
                     '''
+                }
+            }
+        }
+
+        stage('Trigger ArgoCD Sync') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'argocd-admin-pass', variable: 'ARGOCD_PASSWORD')]) {
+                        sh '''
+                            argocd login argocdgolmolab.duckdns.org:443 \
+                                --grpc-web \
+                                --username admin \
+                                --password "hQqK73bQ5b3i2knN" \
+                                --insecure
+                        '''
+                    }
                 }
             }
         }
@@ -154,7 +184,6 @@ pipeline {
             echo "✅ CI/CD Pipeline completed successfully."
         }
         failure {
-            echo "❌ CI/CD Pipeline failed. Check the logs."
         }
         always {
             cleanWs()
