@@ -3,9 +3,11 @@ elasticsearch:
   replicas: 1
   volumeSize: 10Gi
   heapSize: "1g"
+  nodePort: 30092
 
 logstash:
   enabled: true
+  nodePort: 30093
   pipelineConfig: |
     input {
       beats {
@@ -22,10 +24,4 @@ logstash:
 kibana:
   enabled: true
   elasticsearchHost: "http://elasticsearch:9200"
-
-ingress:
-  enabled: true
-  host: "elk.local"
-  path: "/"
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: "/"
+  nodePort: 30094
