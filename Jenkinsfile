@@ -13,6 +13,8 @@ pipeline {
         SONAR_URL = "https://sonarqubegolmolab.duckdns.org"
         GIT_REPO = "https://github.com/gstvo2k15/tomcat.git"
         WAR_TARGET = "${WORKSPACE}/docker/spring-boot-app/target/"
+        MINIO_URL = "https://miniogolmolab.duckdns.org"
+        MINIO_BUCKET = "beta"
     }
 
     triggers {
@@ -73,14 +75,30 @@ pipeline {
                     if (!warFilePath) {
                         error "❌ ERROR: uvc.war not found in workspace!"
                     }
+                    } else {
+                        echo "✅ WAR found at: ${warFilePath}"
+                        env.WAR_PATH = warFilePath
+                        def warFile = "${env.WAR_PATH}"                        
+                    }
 
-                    echo "✅ WAR found at: ${warFilePath}"
-                    env.WAR_PATH = warFilePath
+                    if (fileExists(warFile)) {
+                        withCredentials([usernamePassword(credentialsId: 'minio-s3', usernameVariable: 'MINIO_ACCESS_KEY', passwordVariable: 'MINIO_SECRET_KEY')]) {
+                            sh '''
+                                sh "mkdir -p ${WAR_TARGET}"
+                                sh "cp '${env.WAR_PATH}' ${WAR_TARGET}"
+                                echo "✅ WAR successfully copied to Docker build context!"
+                                sh "ls -l ${WAR_TARGET}"
 
-                    sh "mkdir -p ${WAR_TARGET}"
-                    sh "cp '${env.WAR_PATH}' ${WAR_TARGET}"
-                    echo "✅ WAR successfully copied to Docker build context!"
-                    sh "ls -l ${WAR_TARGET}"
+                                echo "Uploading WAR file to MinIO..."
+                                mc alias set minio ${MINIO_URL} ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}
+                                mc cp ${warFile} minio/${MINIO_BUCKET}/uvc-${BUILD_NUMBER}.war
+                            '''
+                        }
+                    } else {
+                        error "WAR file not found! Build might have failed."
+                    }
+
+
                 }
             }
         }
