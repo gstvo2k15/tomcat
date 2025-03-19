@@ -71,16 +71,16 @@ pipeline {
                 script {
                     echo "Searching for the generated WAR file..."
                     def warFilePath = sh(script: "find ${WORKSPACE} -type f -name 'uvc.war' | head -n 1", returnStdout: true).trim()
-        
+
                     if (!warFilePath) {
                         error "❌ ERROR: uvc.war not found in workspace!"
                     } else {
                         echo "✅ WAR found at: ${warFilePath}"
                         env.WAR_PATH = warFilePath
                     }
-        
+
                     def warFile = env.WAR_PATH
-        
+
                     if (fileExists(warFile)) {
                         withCredentials([usernamePassword(credentialsId: 'minio-s3', usernameVariable: 'MINIO_ACCESS_KEY', passwordVariable: 'MINIO_SECRET_KEY')]) {
                             sh '''
@@ -88,7 +88,7 @@ pipeline {
                                 cp '${env.WAR_PATH}' ${WAR_TARGET}
                                 echo "✅ WAR successfully copied to Docker build context!"
                                 ls -l ${WAR_TARGET}
-        
+
                                 echo "Uploading WAR file to MinIO..."
                                 mc alias set minio ${MINIO_URL} ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}
                                 mc cp ${env.WAR_PATH} minio/${MINIO_BUCKET}/uvc-${BUILD_NUMBER}.war
@@ -100,7 +100,6 @@ pipeline {
                 }
             }
         }
-
 
         stage('Build & Push Docker Image') {
             steps {
