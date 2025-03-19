@@ -5,6 +5,11 @@ elasticsearch:
   volumeSize: 10Gi
   heapSize: "1g"
   nodePort: 30092
+  resources:
+    limits:
+      memory: "2Gi"
+    requests:
+      memory: "1Gi"
 
 logstash:
   enabled: true
