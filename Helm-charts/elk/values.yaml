@@ -7,9 +7,9 @@ elasticsearch:
   nodePort: 30092
   resources:
     limits:
-      memory: "2Gi"
-    requests:
       memory: "1Gi"
+    requests:
+      memory: "512Mi"
 
 logstash:
   enabled: true
@@ -30,9 +30,10 @@ logstash:
 
 kibana:
   enabled: true
+  replicas: 1
   image: docker.elastic.co/kibana/kibana:8.10.2
-  elasticsearchHost: "http://elasticsearch:9200"
   nodePort: 30094
+  elasticsearchHost: "http://elasticsearch:9200"
 
 ingress:
   enabled: false
