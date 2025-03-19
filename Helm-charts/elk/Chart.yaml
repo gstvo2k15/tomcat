@@ -1,0 +1,4 @@
+apiVersion: v2
+name: elk
+version: 1.0.0
+description: "ELK stack with Elasticsearch, Logstash, and Kibana"
