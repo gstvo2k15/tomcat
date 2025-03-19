@@ -2,14 +2,14 @@ elasticsearch:
   enabled: true
   image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
   replicas: 1
-  volumeSize: 10Gi
-  heapSize: "1g"
+  volumeSize: 5Gi
+  heapSize: "512m"
   nodePort: 30092
   resources:
     limits:
-      memory: "1Gi"
+      memory: "750Mi"
     requests:
-      memory: "512Mi"
+      memory: "256Mi"
 
 logstash:
   enabled: true
