@@ -182,15 +182,8 @@ pipeline {
     post {
         success {
             echo "✅ CI/CD Pipeline completed successfully."
-            emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
-                     subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful", 
-                     mimeType: 'text/html', to: "gstvo2k15@gmail.com"
         }
         failure {
-            echo "❌ CI/CD Pipeline failed. Check the logs."
-            emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
-                     subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed", 
-                     mimeType: 'text/html', to: "gstvo2k15@gmail.com"
         }
         always {
             cleanWs()
