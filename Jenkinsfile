@@ -90,7 +90,7 @@ pipeline {
                                 ls -l "$WAR_TARGET"
 
                                 echo -e "\nUploading WAR file to MinIO..."
-                                mc alias set minio https://miniogolmolab.duckdns.org:8444 "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}"
+                                ### mc alias set minio https://miniogolmolab.duckdns.org:8444 "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}"
                                 mc cp "$WAR_PATH" minio/beta/uvc-${BUILD_NUMBER}.war
                             '''
                         }
@@ -195,19 +195,25 @@ pipeline {
 
     post {
         success {
-            echo "✅ CI/CD Pipeline completed successfully."
-            withCredentials([string(credentialsId: 'email_notifier', variable: 'EMAIL_TO')]) {
-                emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
-                         subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful", 
-                         mimeType: 'text/html', to: "${EMAIL_TO}"
+            script {
+                withCredentials([string(credentialsId: 'email_notifier', variable: 'EMAIL_TO')]) {
+                    def recipient = EMAIL_TO
+                    echo "✅ CI/CD Pipeline completed successfully."
+                    emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
+                             subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful", 
+                             mimeType: 'text/html', to: recipient
+                }
             }
         }
         failure {
-            withCredentials([string(credentialsId: 'email_notifier', variable: 'EMAIL_TO')]) {
-                echo "❌ CI/CD Pipeline failed. Check the logs."
-                emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
-                         subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed", 
-                         mimeType: 'text/html', to: "${EMAIL_TO}"                     
+            script {
+                withCredentials([string(credentialsId: 'email_notifier', variable: 'EMAIL_TO')]) {
+                    def recipient = EMAIL_TO
+                    echo "❌ CI/CD Pipeline failed. Check the logs."
+                    emailext body: '''${SCRIPT, template="groovy-html.template"}''', 
+                             subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed", 
+                             mimeType: 'text/html', to: recipient
+                }
             }
         }
         always {
