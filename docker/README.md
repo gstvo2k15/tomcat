@@ -105,54 +105,88 @@ Location: https://192.168.49.2:32409/
 Date: Wed, 19 Mar 2025 09:10:15 GMT
 ```
 
-`vim /etc/nginx/conf.d/minikube.conf`
-
+### Changing metallb and ingress to NodePort
 ```
-nginx -t
-nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
-nginx: configuration file /etc/nginx/nginx.conf test is successful
-
-systemctl reload nginx
-
-curl -I http://192.168.49.2:31593
-HTTP/1.1 307 Temporary Redirect
-Content-Type: text/html; charset=utf-8
-Location: https://192.168.49.2:31593/
-Date: Wed, 19 Mar 2025 09:11:18 GMT
+kubectl get svc -n ingress-nginx
+NAME                                 TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)                      AGE
+ingress-nginx-controller             LoadBalancer   10.96.95.170   192.168.1.223   80:30228/TCP,443:31313/TCP   18h
+ingress-nginx-controller-admission   ClusterIP      10.100.4.251   <none>          443/TCP                      18h
 
 
-cat <<EOF> /etc/nginx/conf.d/minikube.conf
+kubectl patch svc ingress-nginx-controller -n ingress-nginx -p '{"spec": {"type": "NodePort"}}'
+service/ingress-nginx-controller patched
+
+
+kubectl get svc -n ingress-nginx
+NAME                                 TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)                      AGE
+ingress-nginx-controller             NodePort    10.96.95.170   <none>        80:30228/TCP,443:31313/TCP   18h
+ingress-nginx-controller-admission   ClusterIP   10.100.4.251   <none>        443/TCP                      18h
+
+
+minikube ip
+192.168.49.2
+
+       proxy_pass        https://192.168.49.2:31593;
+
+kubectl get ingress -n argocd
+NAME                        CLASS    HOSTS                        ADDRESS        PORTS     AGE
+argocd-ingress              nginx    argocdgolmolab.duckdns.org   192.168.49.2   80, 443   17h
+cm-acme-http-solver-ntpfl   <none>   argocdgolmolab.duckdns.org   192.168.49.2   80        117m
+```
+
+### With real SSL for this endpoint using local nginx as reverseproxy
+```
+sudo certbot --nginx -d argocdgolmolab.duckdns.org --agree-tos --email gstvo2k15@gmail.com
+
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for argocdgolmolab.duckdns.org
+
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/argocdgolmolab.duckdns.org/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/argocdgolmolab.duckdns.org/privkey.pem
+This certificate expires on 2025-06-17.
+
+
+
+sudo mv /etc/nginx/conf.d/minikube.conf /etc/nginx/conf.d/minikube.conf.bak
+
+
+cat <<EOF > /etc/nginx/conf.d/argocdgolmolab.conf
+# --- Redirección de HTTP a HTTPS ---
 server {
     listen 80;
-    server_name argocd.local;
+    server_name argocdgolmolab.duckdns.org;
+    return 302 https://argocdgolmolab.duckdns.org;
+}
+
+# --- Servidor HTTPS con Let's Encrypt ---
+server {
+    listen 443 ssl;
+    server_name argocdgolmolab.duckdns.org;
+
+    ssl_certificate     /etc/letsencrypt/live/argocdgolmolab.duckdns.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/argocdgolmolab.duckdns.org/privkey.pem;
 
     location / {
-        proxy_pass https://192.168.49.2:31593;
-        proxy_ssl_verify off;  # Deshabilita verificación SSL
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+       # Tu ArgoCD está en https://192.168.49.2:31593
+       proxy_pass        https://192.168.49.2:31593;
+       proxy_ssl_verify  off;
+
+       # Cabeceras básicas sin variables raras:
+       proxy_set_header  Host $http_host;
+       proxy_set_header  X-Real-IP $remote_addr;
+       proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 }
+
 EOF
 
-systemctl reload nginx
+cat -A /etc/nginx/conf.d/argocdgolmolab.conf
+
+sudo apt install -yqq dos2unix
+dos2unix /etc/nginx/conf.d/argocdgolmolab.conf
 
 nginx -t
-nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
-nginx: configuration file /etc/nginx/nginx.conf test is successful
 
-
-curl -I http://argocd.local
-HTTP/1.1 200 OK
-Server: nginx/1.26.0 (Ubuntu)
-Date: Wed, 19 Mar 2025 09:12:25 GMT
-Content-Type: text/html; charset=utf-8
-Content-Length: 788
-Connection: keep-alive
-Accept-Ranges: bytes
-Content-Security-Policy: frame-ancestors 'self';
-Vary: Accept-Encoding
-X-Frame-Options: sameorigin
-X-Xss-Protection: 1
+systemctl reload nginx
 ```
