@@ -1,0 +1,12 @@
+# Default values for ingress-tomcat.
+ingress:
+  domain: "helmgolmolab.duckdns.org"
+  className: "nginx"
+  tlsSecret: "gstvolab-tls"
+
+metallb:
+  ipRange: "192.168.1.100-192.168.1.120"
+certManager:
+  email: "gstvo2k15@gmail.com"
+
+nodePort: 30080

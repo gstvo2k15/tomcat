@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ingress-tomcat
+description: A Helm chart to deploy Ingress Nginx, MetalLB, Cert-Manager and Tomcat Ingress
+type: application
+version: 0.1.0
+appVersion: 1.0.0
