@@ -36,3 +36,123 @@
     tomcat-cluster-node1-1  | 12-Mar-2025 16:51:51.511 INFO [main] org.apache.catalina.startup.Catalina.start Server startup in [23459] milliseconds
    ```
 
+## ArgoCD problems with minikube and MetalLB with ingress-nginx
+
+`minikube status`
+```
+minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+```
+
+`kubectl get svc -n argocd`
+```
+NAME                               TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                         AGE
+argocd-applicationset-controller   ClusterIP      10.107.92.63     <none>          7000/TCP                        23h
+argocd-dex-server                  ClusterIP      10.99.194.30     <none>          5556/TCP,5557/TCP               23h
+argocd-redis                       ClusterIP      10.111.117.215   <none>          6379/TCP                        23h
+argocd-repo-server                 ClusterIP      10.106.98.174    <none>          8081/TCP                        23h
+argocd-server                      LoadBalancer   10.108.223.125   192.168.1.222   9980:31593/TCP,9943:32409/TCP   20h
+cm-acme-http-solver-vptj5          NodePort       10.99.2.219      <none>          8089:31390/TCP                  14h
+```
+
+`kubectl get svc -n argocd -o wide`
+```
+NAME                               TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                         AGE   SELECTOR
+argocd-applicationset-controller   ClusterIP      10.107.92.63     <none>          7000/TCP                        23h   app.kubernetes.io/instance=argocd,app.kubernetes.io/name=argocd-applicationset-controller
+argocd-dex-server                  ClusterIP      10.99.194.30     <none>          5556/TCP,5557/TCP               23h   app.kubernetes.io/instance=argocd,app.kubernetes.io/name=argocd-dex-server
+argocd-redis                       ClusterIP      10.111.117.215   <none>          6379/TCP                        23h   app.kubernetes.io/instance=argocd,app.kubernetes.io/name=argocd-redis
+argocd-repo-server                 ClusterIP      10.106.98.174    <none>          8081/TCP                        23h   app.kubernetes.io/instance=argocd,app.kubernetes.io/name=argocd-repo-server
+argocd-server                      LoadBalancer   10.108.223.125   192.168.1.222   9980:31593/TCP,9943:32409/TCP   20h   app.kubernetes.io/name=argocd-server
+cm-acme-http-solver-vptj5          NodePort       10.99.2.219      <none>          8089:31390/TCP                  14h   acme.cert-manager.io/http-domain=2362378830,acme.cert-manager.io/http-token=1024200259,acme.cert-manager.io/http01-solver=true
+```
+
+`kubectl get pods -n argocd`
+```
+NAME                                                READY   STATUS    RESTARTS      AGE
+argocd-application-controller-0                     1/1     Running   2 (30m ago)   23h
+argocd-applicationset-controller-74959d5557-klknh   1/1     Running   2 (30m ago)   23h
+argocd-dex-server-9f84ccbf4-h9x7l                   1/1     Running   2 (30m ago)   23h
+argocd-notifications-controller-6474d7d4b6-hrjkm    1/1     Running   2 (30m ago)   23h
+argocd-redis-5964bcc74-k8wbq                        1/1     Running   2 (30m ago)   23h
+argocd-repo-server-b47f56ddf-xmr77                  1/1     Running   2 (30m ago)   23h
+argocd-server-58fb97fd56-hr866                      1/1     Running   2 (30m ago)   20h
+cm-acme-http-solver-6fsxr                           1/1     Running   1 (30m ago)   14h
+```
+
+`minikube service argocd-server -n argocd --url`
+```
+http://192.168.49.2:31593
+http://192.168.49.2:32409
+```
+
+`curl -I http://192.168.49.2:31593`
+```
+HTTP/1.1 307 Temporary Redirect
+Content-Type: text/html; charset=utf-8
+Location: https://192.168.49.2:31593/
+Date: Wed, 19 Mar 2025 09:10:06 GMT
+```
+
+`curl -I http://192.168.49.2:32409`
+```
+HTTP/1.1 307 Temporary Redirect
+Content-Type: text/html; charset=utf-8
+Location: https://192.168.49.2:32409/
+Date: Wed, 19 Mar 2025 09:10:15 GMT
+```
+
+`vim /etc/nginx/conf.d/minikube.conf`
+
+```
+nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+systemctl reload nginx
+
+curl -I http://192.168.49.2:31593
+HTTP/1.1 307 Temporary Redirect
+Content-Type: text/html; charset=utf-8
+Location: https://192.168.49.2:31593/
+Date: Wed, 19 Mar 2025 09:11:18 GMT
+
+
+cat <<EOF> /etc/nginx/conf.d/minikube.conf
+server {
+    listen 80;
+    server_name argocd.local;
+
+    location / {
+        proxy_pass https://192.168.49.2:31593;
+        proxy_ssl_verify off;  # Deshabilita verificación SSL
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+EOF
+
+systemctl reload nginx
+
+nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+
+curl -I http://argocd.local
+HTTP/1.1 200 OK
+Server: nginx/1.26.0 (Ubuntu)
+Date: Wed, 19 Mar 2025 09:12:25 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 788
+Connection: keep-alive
+Accept-Ranges: bytes
+Content-Security-Policy: frame-ancestors 'self';
+Vary: Accept-Encoding
+X-Frame-Options: sameorigin
+X-Xss-Protection: 1
+```

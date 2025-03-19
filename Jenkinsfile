@@ -167,7 +167,7 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: 'argocd-admin-pass', variable: 'ARGOCD_PASSWORD')]) {
                         sh '''
-                            argocd login --grpc-web argocdgolmolab.duckdns.org \
+                            argocd login --grpc-web http://argocd.local \
                                 --username admin \
                                 --password $ARGOCD_PASSWORD \
                                 --insecure
