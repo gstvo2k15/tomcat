@@ -149,7 +149,7 @@ pipeline {
         stage('Restart Tomcat') {
             steps {
                 echo "Restarting the Tomcat container..."
-                sh "docker restart ${   }"
+                sh "docker restart ${TOMCAT_CONTAINER_NAME}"
             }
         }
 
