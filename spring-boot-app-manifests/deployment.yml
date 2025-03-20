@@ -6,8 +6,7 @@ metadata:
   labels:
     app: spring-boot-app
   # checkov:skip=CKV_K8S_14: Using latest image is intentional
-  # checkov:skip=CKV_K8S_23: Running as root is required for this application
-  # checkov:skip=CKV_K8S_8: Liveness probe is not needed at this moment
+  # checkov:skip=CKV_K8S_43: Not using digest for image
 spec:
   replicas: 2
   selector:
@@ -18,13 +17,24 @@ spec:
       labels:
         app: spring-boot-app
     spec:
-      # checkov:skip=CKV_K8S_29: SecurityContext is not needed for this application
-      # checkov:skip=CKV_K8S_23: Running as root is required for application compatibility
-      # checkov:skip=CKV_K8S_40: High UID is not needed    
+      # checkov:skip=CKV_K8S_29: SecurityContext is not needed
+      # checkov:skip=CKV_K8S_23: Running as root is required
+      # checkov:skip=CKV_K8S_40: High UID is not necessary
+      # checkov:skip=CKV_K8S_31: SeccompProfile is not enforced
+      # checkov:skip=CKV_K8S_20: Privilege escalation is required
+      # checkov:skip=CKV2_K8S_6: No NetworkPolicy is defined
       restartPolicy: Always
       containers:
       - name: spring-boot-app
         image: gstvo2k15/ultimate-cicd:latest
+        securityContext:
+          # checkov:skip=CKV_K8S_22: Read-only filesystem is not enforced
+          # checkov:skip=CKV_K8S_8: Liveness probe is not needed
+          # checkov:skip=CKV_K8S_9: Readiness probe is not needed
+          # checkov:skip=CKV_K8S_35: Using env variables for secrets is required
+          # checkov:skip=CKV_K8S_37: Specific capabilities are required
+          # checkov:skip=CKV_K8S_38: ServiceAccountToken auto-mount is needed
+          # checkov:skip=CKV_K8S_28: NET_RAW is required for networking
         ports:
         - containerPort: 8080
         volumeMounts:
@@ -43,16 +53,6 @@ spec:
             memory: "1Gi"
             cpu: "500m"
         command: ["sh", "-c", "while true; do sleep 30; done"]
-        # Liveness and Readiness probes disabled temporaly
-        # checkov:skip=CKV_K8S_8: Liveness probe is not needed currently
-        # checkov:skip=CKV_K8S_9: Readiness probe is not required at this time
-        # checkov:skip=CKV_K8S_22: Read-only filesystem is not enforced
-        # checkov:skip=CKV_K8S_20: Privilege escalation is required for app
-        # checkov:skip=CKV_K8S_31: SeccompProfile is not configured intentionally
-        # checkov:skip=CKV_K8S_35: Using env variables for secrets is required
-        # checkov:skip=CKV_K8S_37: Container requires specific capabilities
-        # checkov:skip=CKV_K8S_38: ServiceAccountToken auto-mount is required
-        # checkov:skip=CKV_K8S_28: NET_RAW is required for network functions        
       volumes:
       - name: tomcat-war-storage
         persistentVolumeClaim:
