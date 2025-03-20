@@ -57,9 +57,7 @@ pipeline {
 
         stage('Security Scan of Dockerfile - Checkov') {
             steps {
-                sh '''
-                docker run --rm -v $(pwd):/docker bridgecrew/checkov -d /docker
-                '''
+                sh 'docker run --rm -v $(pwd):/docker bridgecrew/checkov --directory /docker'
             }
         }
        
