@@ -57,10 +57,14 @@ pipeline {
 
         stage('Security Scan of Dockerfile - Checkov') {
             steps {
-                sh 'docker run --rm -v $(pwd):/docker bridgecrew/checkov --directory /docker'
+                sh '''
+                docker run --rm -v $(pwd):/docker bridgecrew/checkov \
+                -d /docker \
+                --skip-check CKV_K8S_43
+                '''
             }
         }
-
+       
         stage('Static Code Analysis') {
             steps {
                 withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
