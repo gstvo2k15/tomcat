@@ -59,6 +59,7 @@ pipeline {
             steps {
                 sh 'docker run --rm -v $(pwd):/docker bridgecrew/checkov --directory /docker'
             }
+        }
 
         stage('Static Code Analysis') {
             steps {
