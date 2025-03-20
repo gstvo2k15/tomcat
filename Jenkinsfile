@@ -92,17 +92,18 @@ pipeline {
                     def warFile = env.WAR_PATH
 
                     if (fileExists(warFile)) {
-                        withCredentials([usernamePassword(credentialsId: 'minio-s3', usernameVariable: 'MINIO_ACCESS_KEY', passwordVariable: 'MINIO_SECRET_KEY')]) {
+                        withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                             sh '''
                                 mkdir -p "$WAR_TARGET"
                                 cp "$WAR_PATH" "$WAR_TARGET"
                                 echo -e "\n✅ WAR successfully copied to Docker build context!"
                                 ls -l "$WAR_TARGET"
 
-                                echo -e "\nUploading WAR file to MinIO..."
-                                mc alias set minio https://miniogolmolab.duckdns.org:8444 "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}"
-                                mc ls minio/beta
-                                mc cp "$WAR_PATH" minio/beta/uvc-${BUILD_NUMBER}.war
+                                echo -e "\nUploading WAR file to Nexus..."
+                                curl -u "$NEXUS_USER:$NEXUS_PASS" --upload-file "$WAR_PATH" \
+                                "https://nexusgolmolab.duckdns.org/repository/maven-releases/uvc-${BUILD_NUMBER}.war"
+
+                                echo -e "\n✅ WAR file successfully uploaded to Nexus!"
                             '''
                         }
                     } else {
