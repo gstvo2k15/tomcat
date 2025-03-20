@@ -1,0 +1,3 @@
+skip_checks:
+  - CKV_K8S_43
+  

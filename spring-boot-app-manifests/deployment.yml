@@ -19,9 +19,13 @@ spec:
       securityContext:
         seccompProfile:
           type: RuntimeDefault
+      # Refuse mount of tokens by k8s (CKV_K8S_38)
+      automountServiceAccountToken: false
       containers:
       - name: spring-boot-app
         image: gstvo2k15/ultimate-cicd:v1.0.0
+        # Ensure that image always will be downloaded (CKV_K8S_15)
+        imagePullPolicy: Always
         securityContext:
           runAsUser: 10001
           runAsGroup: 10001
@@ -30,7 +34,8 @@ spec:
           readOnlyRootFilesystem: true
           capabilities:
             drop:
-              - NET_RAW
+            # Delete all asigned capabilities (CKV_K8S_37)
+              - ALL 
         ports:
         - containerPort: 8080
         volumeMounts:
