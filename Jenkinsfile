@@ -97,7 +97,7 @@ pipeline {
 
                                 echo -e "\nUploading WAR file to MinIO..."
                                 ### mc alias set minio https://miniogolmolab.duckdns.org:8444 "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}"
-                                mc cp "$WAR_PATH" minio/beta/uvc-${BUILD_NUMBER}.war
+                                mc cp "$WAR_PATH" beta/uvc-${BUILD_NUMBER}.war
                             '''
                         }
                     } else {
