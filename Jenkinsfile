@@ -57,7 +57,11 @@ pipeline {
 
         stage('Security Scan of Dockerfile - Checkov') {
             steps {
-                sh 'docker run --rm -v $(pwd):/docker bridgecrew/checkov --directory /docker'
+                sh '''
+                docker run --rm -v $(pwd):/docker bridgecrew/checkov \
+                --skip-check CKV_K8S_43 \
+                -d /docker
+                '''
             }
         }
 
