@@ -203,15 +203,14 @@ pipeline {
             }
         }
 
-        stage('Deploy WAR to Kubernetes') {
-            steps {
-                script {
-                    echo "Updating Kubernetes Deployment to use the latest WAR from Nexus..."
-
-                    withCredentials([string(credentialsId: 'k8s-token', variable: 'K8S_TOKEN')]) {
+            stage('Deploy WAR to Kubernetes') {
+                steps {
+                    script {
+                        echo "Updating Kubernetes Deployment to use the latest WAR from Nexus..."
+            
                         sh '''
-                            kubectl config set-credentials jenkins-sa --token=$K8S_TOKEN
-                            kubectl set env deployment/spring-boot-app -n tomcatk8s BUILD_NUMBER="${BUILD_NUMBER}"
+                            echo "Restarting spring-boot-app with updated BUILD_NUMBER=${BUILD_NUMBER}"
+                            kubectl set env deployment/spring-boot-app -n tomcatk8s BUILD_NUMBER=${BUILD_NUMBER}
                             kubectl rollout restart deployment/spring-boot-app -n tomcatk8s
                         '''
                     }

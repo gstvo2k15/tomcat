@@ -35,7 +35,20 @@ spec:
           capabilities:
             drop:
             # Delete all asigned capabilities (CKV_K8S_37)
-              - ALL 
+              - ALL
+        env:
+        - name: NEXUS_USER
+          valueFrom:
+            secretKeyRef:
+              name: spring-boot-secrets
+              key: username
+        - name: NEXUS_PASS
+          valueFrom:
+            secretKeyRef:
+              name: spring-boot-secrets
+              key: password
+        - name: BUILD_NUMBER
+          value: "replaceImageTag"              
         ports:
         - containerPort: 8080
         volumeMounts:
