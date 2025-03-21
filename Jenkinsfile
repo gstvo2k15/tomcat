@@ -115,7 +115,7 @@ pipeline {
         stage('Build & Push Docker Image') {
             steps {
                 script {
-                    def imageTag = "${env.BUILD_NUMBER}"
+                    def imageTag = "${BUILD_NUMBER}"
         
                     echo "🛠️ Building Docker image with tags '${imageTag}' and 'latest'..."
 
