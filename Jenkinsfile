@@ -15,6 +15,7 @@ pipeline {
         WAR_TARGET = "${WORKSPACE}/docker/spring-boot-app/target/"
         MINIO_URL = "https://miniogolmolab.duckdns.org"
         MINIO_BUCKET = "beta"
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'
     }
 
     triggers {
@@ -22,7 +23,51 @@ pipeline {
     }
 
     stages {
-        
+
+
+        stage('Setup Kubernetes Credentials') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'k8s-token', variable: 'KUBE_TOKEN')]) {
+                        sh '''
+                            mkdir -p ~/.kube
+                            echo "
+                            apiVersion: v1
+                            kind: Config
+                            clusters:
+                            - cluster:
+                                server: https://kubernetes.default.svc
+                                insecure-skip-tls-verify: true
+                              name: kubernetes
+                            contexts:
+                            - context:
+                                cluster: kubernetes
+                                user: jenkins
+                              name: jenkins-context
+                            current-context: jenkins-context
+                            users:
+                            - name: jenkins
+                              user:
+                                token: $KUBE_TOKEN
+                            " > ~/.kube/config
+                            chmod 600 ~/.kube/config
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Check Kubernetes Access') {
+            steps {
+                script {
+                    sh "kubectl get nodes"
+                }
+            }
+        }
+    }
+
+
+
         stage('Checkout') {
             steps {
                 echo "Cloning repository..."
