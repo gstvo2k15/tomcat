@@ -203,7 +203,6 @@ pipeline {
                 }
             }
         }
-    }
 
         stage('Deploy WAR to Kubernetes') {
             steps {
@@ -221,6 +220,7 @@ pipeline {
                 }
             }
         }
+    }
 
     post {
         success {
