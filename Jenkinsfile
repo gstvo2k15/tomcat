@@ -209,10 +209,9 @@ pipeline {
                 script {
                     echo "Updating Kubernetes Deployment to use the latest WAR from Nexus..."
 
-                    withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    withCredentials([string(credentialsId: 'k8s-token', variable: 'K8S_TOKEN')]) {
                         sh '''
-                            kubectl set env deployment/spring-boot-app -n tomcatk8s NEXUS_USER="$NEXUS_USER"
-                            kubectl set env deployment/spring-boot-app -n tomcatk8s NEXUS_PASS="$NEXUS_PASS"
+                            kubectl config set-credentials jenkins-sa --token=$K8S_TOKEN
                             kubectl set env deployment/spring-boot-app -n tomcatk8s BUILD_NUMBER="${BUILD_NUMBER}"
                             kubectl rollout restart deployment/spring-boot-app -n tomcatk8s
                         '''
