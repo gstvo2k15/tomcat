@@ -115,17 +115,20 @@ pipeline {
         stage('Build & Push Docker Image') {
             steps {
                 script {
-                    echo "🛠️ Building Docker image with tag 'latest'..."
+                    def imageTag = "${env.BUILD_NUMBER}"
+        
+                    echo "🛠️ Building Docker image with tags '${imageTag}' and 'latest'..."
 
                     sh '''
                         cd ${WORKSPACE}/docker/spring-boot-app
-                        docker build -t ${DOCKER_IMAGE}:latest .
+                        docker build -t ${DOCKER_IMAGE}:${imageTag} -t ${DOCKER_IMAGE}:latest .
                     '''
 
-                    echo "📤 Pushing image with tag 'latest'..."
+                    echo "📤 Pushing image with tags '${imageTag}' and 'latest'..."
                     withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         sh '''
                             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                            docker push ${DOCKER_IMAGE}:${imageTag}
                             docker push ${DOCKER_IMAGE}:latest
                         '''
                     }
