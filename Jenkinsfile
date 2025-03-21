@@ -115,17 +115,18 @@ pipeline {
         stage('Build & Push Docker Image') {
             steps {
                 script {
-                    echo "Building Docker image..."
+                    echo "🛠️ Building Docker image with tag 'latest'..."
+
                     sh '''
                         cd ${WORKSPACE}/docker/spring-boot-app
-                        docker build -t ${DOCKER_IMAGE} .
+                        docker build -t ${DOCKER_IMAGE}:latest .
                     '''
 
-                    echo "Logging into Docker Hub..."
+                    echo "📤 Pushing image with tag 'latest'..."
                     withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         sh '''
                             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                            docker push ${DOCKER_IMAGE}
+                            docker push ${DOCKER_IMAGE}:latest
                         '''
                     }
                 }
@@ -183,6 +184,11 @@ pipeline {
                             git push https://${GITHUB_TOKEN}@github.com/gstvo2k15/tomcat HEAD:fix/deployment
                         fi
                     '''
+                    echo "🔁 Tagging and pushing Docker image with build number..."
+                    sh '''
+                        docker tag ${DOCKER_IMAGE}:latest ${DOCKER_IMAGE}:${BUILD_NUMBER}
+                        docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}
+                    '''                    
                 }
             }
         }
