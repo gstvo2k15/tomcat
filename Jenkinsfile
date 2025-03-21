@@ -201,23 +201,26 @@ pipeline {
             }
         }
 
-        stage('Trigger ArgoCD Sync') {
-            steps {
-                script {
-                    withCredentials([string(credentialsId: 'argocd-admin-pass', variable: 'ARGOCD_PASSWORD')]) {
-                        sh '''
-                            argocd login argocdgolmolab.duckdns.org:443 \
-                                --grpc-web \
-                                --username admin \
-                                --password "$ARGOCD_PASSWORD" \
-                                --insecure
+            stage('Trigger ArgoCD Sync') {
+                steps {
+                    script {
+                        withCredentials([string(credentialsId: 'argocd-admin-pass', variable: 'ARGOCD_PASSWORD')]) {
+                            sh '''
+                                argocd login argocdgolmolab.duckdns.org:443 \
+                                    --grpc-web \
+                                    --username admin \
+                                    --password "$ARGOCD_PASSWORD" \
+                                    --insecure
 
-                            argocd app sync spring-boot-app
-                        '''
+                                argocd app sync spring-boot-app \
+                                    --server argocdgolmolab.duckdns.org:443 \
+                                    --grpc-web \
+                                    --insecure
+                            '''
+                        }
                     }
                 }
             }
-        }
 
             stage('Deploy WAR to Kubernetes') {
                 steps {
