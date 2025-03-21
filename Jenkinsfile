@@ -187,6 +187,14 @@ pipeline {
             }
         }
 
+        stage('Create Namespace if Needed') {
+            steps {
+                sh '''
+                    kubectl get ns tomcatk8s || kubectl create ns tomcatk8s
+                '''
+            }
+        }
+
         stage('Trigger ArgoCD Sync') {
             steps {
                 script {
