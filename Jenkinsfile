@@ -23,8 +23,6 @@ pipeline {
     }
 
     stages {
-
-
         stage('Setup Kubernetes Credentials') {
             steps {
                 script {
@@ -64,9 +62,6 @@ pipeline {
                 }
             }
         }
-    }
-
-
 
         stage('Checkout') {
             steps {
