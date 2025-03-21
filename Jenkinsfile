@@ -197,6 +197,8 @@ pipeline {
                                 --username admin \
                                 --password "$ARGOCD_PASSWORD" \
                                 --insecure
+
+                            argocd app sync spring-boot-app
                         '''
                     }
                 }
@@ -207,7 +209,7 @@ pipeline {
                 steps {
                     script {
                         echo "Updating Kubernetes Deployment to use the latest WAR from Nexus..."
-            
+
                         sh '''
                             echo "Restarting spring-boot-app with updated BUILD_NUMBER=${BUILD_NUMBER}"
                             kubectl set env deployment/spring-boot-app -n tomcatk8s BUILD_NUMBER=${BUILD_NUMBER}
