@@ -38,7 +38,7 @@ spec:
               - ALL
         env:
         - name: BUILD_NUMBER
-          value: "replaceImageTag"              
+          value: "118"              
         ports:
         - containerPort: 8080
         volumeMounts:
