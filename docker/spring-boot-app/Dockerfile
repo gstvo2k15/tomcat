@@ -6,8 +6,6 @@ ENV BUILD_NUMBER=latest
 ENV NEXUS_USER=default
 ENV NEXUS_PASS=default
 
-RUN apt update -yqq && apt install -yqq curl && rm -rf /var/lib/apt/lists/*
-
 # Set a non-root user
 USER tomcat
 
