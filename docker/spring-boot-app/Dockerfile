@@ -9,8 +9,6 @@ ENV NEXUS_PASS=default
 # Set a non-root user
 USER tomcat
 
-# Copy generated WAR in Tomcat webapps deployments
-# Script de arranque que descarga el WAR y lo lanza
 COPY start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
