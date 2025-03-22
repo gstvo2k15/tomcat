@@ -19,6 +19,11 @@ spec:
         image: {{ .Values.elasticsearch.image }}
         ports:
         - containerPort: 9200
+        env:
+        - name: discovery.type
+          value: single-node
+        - name: xpack.security.enabled
+          value: "false"
         volumeMounts:
         - name: elasticsearch-storage
           mountPath: /usr/share/elasticsearch/data

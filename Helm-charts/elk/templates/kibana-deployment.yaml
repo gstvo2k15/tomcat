@@ -22,3 +22,5 @@ spec:
         env:
         - name: ELASTICSEARCH_HOSTS
           value: "http://elasticsearch:9200"
+        - name: xpack.security.enabled
+          value: "false"

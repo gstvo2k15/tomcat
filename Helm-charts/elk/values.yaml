@@ -15,6 +15,7 @@ logstash:
   enabled: true
   image: docker.elastic.co/logstash/logstash:8.10.2
   nodePort: 30093
+  beatsPort: 5044
   pipelineConfig: |
     input {
       beats {
