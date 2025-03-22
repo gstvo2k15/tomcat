@@ -117,20 +117,20 @@ pipeline {
                 script {
                     def imageTag = "${BUILD_NUMBER}"
         
-                    echo "🛠️ Building Docker image with tags '${imageTag}' and 'latest'..."
-
-                    sh '''
+                    echo "🛠️ Building Docker image with tag '${imageTag}'..."
+        
+                    sh """
                         cd ${WORKSPACE}/docker/spring-boot-app
                         docker build -t ${DOCKER_IMAGE}:${imageTag} -t ${DOCKER_IMAGE}:latest .
-                    '''
-
-                    echo "📤 Pushing image with tags '${imageTag}' and 'latest'..."
+                    """
+        
+                    echo "📤 Pushing image with tag '${imageTag}' and 'latest'..."
                     withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh '''
+                        sh """
                             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
                             docker push ${DOCKER_IMAGE}:${imageTag}
                             docker push ${DOCKER_IMAGE}:latest
-                        '''
+                        """
                     }
                 }
             }
