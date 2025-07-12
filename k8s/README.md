@@ -1,3 +1,4 @@
+### Create namespace for deployment
 
 ```bash
 kubectl create namespace tomcat-ns
@@ -65,6 +66,7 @@ EOF
 `docker run --rm -v "$PWD/hello-war":/app -w /app maven:3.8-jdk-8 mvn clean package`
 
 
+### Compile with maven
 ```bash
 [INFO] Packaging webapp
 [INFO] Assembling webapp [hello-war] in [/app/target/hello]
@@ -84,7 +86,7 @@ root@k8s-node01:~# ls -ltr hello-war/target/hello.war
 -rw-r--r-- 1 root root 2842 Jul 12 11:33 hello-war/target/hello.war
 ```
 
-
+### Publish war in specific docker image
 ```bash
 cat <<EOF> Dockerfile
 FROM tomcat:8.5-jre8-alpine
