@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: spring-boot-app
-          image: gstvo2k15/ultimate-cicd:latest
+          image: gstvo2k15/ultimate-cicd:38
           imagePullPolicy: Always
 
           securityContext:
