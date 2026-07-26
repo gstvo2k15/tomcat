@@ -33,7 +33,6 @@ Repository to run Apache Tomcat locally, in Docker, or in Kubernetes. It include
 ```bash
 # Clone repository
 git clone https://github.com/gstvo2k15/tomcat
-cd tomcat
 
 # Build WAR artifact
 mvn -f src/pom.xml clean package
